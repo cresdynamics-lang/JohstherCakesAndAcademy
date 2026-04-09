@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import {
   Dialog,
@@ -84,43 +85,77 @@ const Sprinkles = () => (
 const FieldWrapper = ({ label, id, type, placeholder, registration, error }: {
   label: string; id: string; type: string; placeholder: string;
   registration: object; error?: string;
-}) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-    <label
-      htmlFor={id}
-      style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 600, fontSize: '0.85rem', color: '#78350F' }}
-    >
-      {label}
-    </label>
-    <input
-      id={id}
-      type={type}
-      placeholder={placeholder}
-      {...registration}
-      style={{
-        width: '100%',
-        padding: '10px 14px',
-        border: error ? '1.5px solid #DC2626' : '1.5px solid #F59E0B55',
-        borderRadius: 10,
-        background: '#FFFBEB',
-        fontFamily: "'Comic Neue', cursive",
-        fontSize: '0.9rem',
-        color: '#78350F',
-        outline: 'none',
-        transition: 'border-color 0.2s, box-shadow 0.2s',
-      }}
-      onFocus={e => {
-        e.target.style.borderColor = '#F59E0B';
-        e.target.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.18)';
-      }}
-      onBlur={e => {
-        e.target.style.borderColor = error ? '#DC2626' : '#F59E0B55';
-        e.target.style.boxShadow = 'none';
-      }}
-    />
-    {error && <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.78rem', color: '#DC2626', margin: 0 }}>{error}</p>}
-  </div>
-);
+}) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPasswordField = type === 'password';
+  const inputType = isPasswordField ? (showPassword ? 'text' : 'password') : type;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label
+        htmlFor={id}
+        style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 600, fontSize: '0.85rem', color: '#78350F' }}
+      >
+        {label}
+      </label>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+        <input
+          id={id}
+          type={inputType}
+          placeholder={placeholder}
+          {...registration}
+          style={{
+            width: '100%',
+            padding: '10px 14px',
+            paddingRight: isPasswordField ? '40px' : '14px',
+            border: error ? '1.5px solid #DC2626' : '1.5px solid #F59E0B55',
+            borderRadius: 10,
+            background: '#FFFBEB',
+            fontFamily: "'Comic Neue', cursive",
+            fontSize: '0.9rem',
+            color: '#78350F',
+            outline: 'none',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+            boxSizing: 'border-box'
+          }}
+          onFocus={e => {
+            e.target.style.borderColor = '#F59E0B';
+            e.target.style.boxShadow = '0 0 0 3px rgba(245,158,11,0.18)';
+          }}
+          onBlur={e => {
+            e.target.style.borderColor = error ? '#DC2626' : '#F59E0B55';
+            e.target.style.boxShadow = 'none';
+          }}
+        />
+        {isPasswordField && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: 'absolute',
+              right: 12,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#92400E',
+              opacity: 0.6,
+              padding: 0,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+      </div>
+      {error && <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.78rem', color: '#DC2626', margin: 0 }}>{error}</p>}
+    </div>
+  );
+};
 
 /* ─── LOGIN FORM ─── */
 function LoginForm({ onClose }: { onClose: () => void }) {
