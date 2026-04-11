@@ -8,22 +8,43 @@ import FAQ from './components/FAQ';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+import AuthModal from './components/AuthModal';
+import { useAuth } from './context/AuthContext';
+import { useNavigation } from './context/NavigationContext';
+import CheckoutPage from './pages/CheckoutPage';
 
 export default function App() {
+  const { isAuthModalOpen, closeAuthModal, authDefaultTab } = useAuth();
+  const { currentPage } = useNavigation();
+
   return (
     <>
-      <Navbar />
-      <CartDrawer />
-      <main>
-        <Hero />
-        <CakesShowcase />
-        <Academy />
-        <Courses />
-        <Testimonials />
-        <FAQ />
-        <Contact />
-      </main>
-      <Footer />
+      {currentPage === 'home' && (
+        <>
+          <Navbar />
+          <CartDrawer />
+          <main>
+            <Hero />
+            <CakesShowcase />
+            <Academy />
+            <Courses />
+            <Testimonials />
+            <FAQ />
+            <Contact />
+          </main>
+          <Footer />
+        </>
+      )}
+
+      {currentPage === 'checkout' && (
+        <CheckoutPage />
+      )}
+      
+      <AuthModal
+        open={isAuthModalOpen}
+        onClose={closeAuthModal}
+        defaultTab={authDefaultTab}
+      />
     </>
   );
 }
