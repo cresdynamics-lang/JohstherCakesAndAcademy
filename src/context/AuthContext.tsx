@@ -10,12 +10,27 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, name?: string) => void;
   logout: () => void;
+  isAuthModalOpen: boolean;
+  authDefaultTab: 'login' | 'signup';
+  openAuthModal: (tab?: 'login' | 'signup') => void;
+  closeAuthModal: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authDefaultTab, setAuthDefaultTab] = useState<'login' | 'signup'>('login');
+
+  const openAuthModal = (tab: 'login' | 'signup' = 'login') => {
+    setAuthDefaultTab(tab);
+    setIsAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
+  };
 
   const login = (email: string, name?: string) => {
     // Simulate login
@@ -31,7 +46,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{
+      user, login, logout,
+      isAuthModalOpen, authDefaultTab, openAuthModal, closeAuthModal
+    }}>
       {children}
     </AuthContext.Provider>
   );

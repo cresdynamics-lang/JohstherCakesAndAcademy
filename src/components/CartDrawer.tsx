@@ -1,12 +1,24 @@
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import CheckoutModal from './CheckoutModal';
+import { useNavigation } from '../context/NavigationContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function CartDrawer() {
   const { items, removeFromCart, updateQuantity, totalItems, subtotal, isCartOpen, setIsCartOpen } = useCart();
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const { user, openAuthModal } = useAuth();
+  const { currentPage, goToCheckout } = useNavigation();
 
-  if (!isCartOpen) return null;
+  const handleCheckoutClick = () => {
+    if (user) {
+      setIsCartOpen(false);
+      goToCheckout();
+    } else {
+      setIsCartOpen(false);
+      openAuthModal('login');
+    }
+  };
+
+  if (!isCartOpen || currentPage !== 'home') return null;
 
   return (
     <>
@@ -93,7 +105,7 @@ export default function CartDrawer() {
               <span style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.25rem', color: '#78350F' }}>KES {subtotal.toLocaleString()}</span>
             </div>
             <button 
-              onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }}
+              onClick={handleCheckoutClick}
               style={{
                 width: '100%', padding: '16px', background: 'linear-gradient(135deg, #92400E 0%, #B45309 100%)',
                 color: '#fff', border: 'none', borderRadius: '16px', fontFamily: "'Baloo 2', cursive", fontWeight: 700, fontSize: '1.1rem',
@@ -112,9 +124,6 @@ export default function CartDrawer() {
           to { transform: translateX(0); }
         }
       `}</style>
-      
-      {/* Dynamic Checkout component rendered conditionally */}
-      <CheckoutModal open={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
     </>
   );
 }
