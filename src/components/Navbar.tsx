@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import AuthModal from './AuthModal';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -15,15 +14,12 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authDefaultTab, setAuthDefaultTab] = useState<'login' | 'signup'>('login');
 
-  const { user, logout } = useAuth();
+  const { user, logout, openAuthModal } = useAuth();
   const { totalItems, setIsCartOpen } = useCart();
 
   const openAuth = (tab: 'login' | 'signup') => {
-    setAuthDefaultTab(tab);
-    setAuthOpen(true);
+    openAuthModal(tab);
   };
 
   useEffect(() => {
@@ -428,12 +424,6 @@ export default function Navbar() {
         }
       `}</style>
 
-      {/* Auth Modal */}
-      <AuthModal
-        open={authOpen}
-        onClose={() => setAuthOpen(false)}
-        defaultTab={authDefaultTab}
-      />
     </header>
   );
 }
