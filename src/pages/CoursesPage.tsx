@@ -249,6 +249,7 @@ export default function CoursesPage() {
                          </div>
                        ) : (
                         <button 
+                          aria-label={`Add ${course.name} to cart`}
                           onClick={() => {
                             addToCart({
                               id: course.id,
