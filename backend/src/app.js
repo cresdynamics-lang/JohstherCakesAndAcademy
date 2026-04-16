@@ -6,6 +6,11 @@ require('dotenv').config();
 
 const authRoutes = require('../routes/auth');
 const userRoutes = require('../routes/users');
+const cakeRoutes = require('../routes/cakes');
+const courseRoutes = require('../routes/courses');
+const academyRoutes = require('../routes/academy');
+const inquiryRoutes = require('../routes/inquiries');
+const testimonialRoutes = require('../routes/testimonials');
 
 const app = express();
 
@@ -60,6 +65,11 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/cakes', cakeRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/academy', academyRoutes);
+app.use('/api/inquiries', inquiryRoutes);
+app.use('/api/testimonials', testimonialRoutes);
 
 // 404 handler - using a different approach
 app.use((req, res, next) => {

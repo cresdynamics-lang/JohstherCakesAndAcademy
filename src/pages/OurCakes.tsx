@@ -15,20 +15,16 @@ const COLOR_MAP: Record<string, string> = {
   'Purple': '#7E22CE',
 };
 
-const MOCK_CAKES = [
-  { id: 101, name: 'Royal Ivory Dream', category: 'Wedding', color: 'White', price: 12500, image: '/hero_cake_elegant.png', tag: 'Premium', desc: 'A towering classic white wedding cake with subtle ivory floral details.' },
-  { id: 102, name: 'Blush Rose Celebration', category: 'Birthday', color: 'Pink', price: 4500, image: '/red_velvet_cake.png', tag: 'Best Seller', desc: 'Soft pink buttercream rosettes covering a rich velvet core.' },
-  { id: 103, name: 'Golden Jubilee Tier', category: 'Corporate', color: 'Gold', price: 8900, image: '/hero-cake.png', tag: 'Elegant', desc: 'Accented with genuine edible gold leaf for corporate milestones.' },
-  { id: 104, name: 'Midnight Stargazer', category: 'Birthday', color: 'Blue', price: 5200, image: '/hero_baker.png', tag: 'New', desc: 'Deep blue gradient with silver sprinkles resembling a night sky.' },
-  { id: 105, name: 'Pistachio Meadow', category: 'Academy', color: 'Green', price: 2800, image: '/academy-class.png', tag: 'Student Made', desc: 'Crafted by our senior academy students featuring pistachio crumbles.' },
-  { id: 106, name: 'Crimson Velvet Hearts', category: 'Wedding', color: 'Red', price: 9500, image: '/red_velvet_cake.png', tag: 'Romantic', desc: 'A passionate red velvet multi-tier perfect for bold weddings.' },
-  { id: 107, name: 'Double Chocolate Fudge', category: 'Birthday', color: 'Chocolate', price: 3800, image: '/hero_baker.png', tag: 'Popular', desc: 'Decadent, rich, and utterly chocolatey inside and out.' },
-  { id: 108, name: 'Lavender Dreamscape', category: 'Academy', color: 'Purple', price: 2600, image: '/hero-cake.png', tag: 'Student Made', desc: 'A beautiful lavender-infused creation with subtle floral notes.' },
-  { id: 109, name: 'Corporate Elegance', category: 'Corporate', color: 'White', price: 6000, image: '/hero_cake_elegant.png', tag: 'Bespoke', desc: 'Minimalist white fondant with space for your company logo.' },
-  { id: 110, name: 'Golden Choco Drip', category: 'Birthday', color: 'Chocolate', price: 4200, image: '/hero_baker.png', tag: 'Decadent', desc: 'Chocolate base with a mesmerizing metallic gold drip effect.' },
-  { id: 111, name: 'Ocean Breeze Fondant', category: 'Wedding', color: 'Blue', price: 11000, image: '/academy-class.png', tag: 'Premium', desc: 'Nautical-inspired wedding cake with sugar seashells.' },
-  { id: 112, name: 'Classic Strawberry Shortcake', category: 'Birthday', color: 'Red', price: 3300, image: '/red_velvet_cake.png', tag: 'Classic', desc: 'Fresh strawberries layered between vanilla sponge and cream.' },
-];
+interface Cake {
+  id: number;
+  name: string;
+  category: string;
+  color: string;
+  price: number;
+  image_url: string;
+  tag: string;
+  description: string;
+}
 
 export default function OurCakes() {
   const { addToCart, items, updateQuantity, setIsCartOpen } = useCart();
@@ -38,6 +34,25 @@ export default function OurCakes() {
   const [maxPrice, setMaxPrice] = useState(15000);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [cakes, setCakes] = useState<Cake[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCakes = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/cakes');
+        const data = await response.json();
+        if (data.success) {
+          setCakes(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch cakes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCakes();
+  }, []);
 
   // Initialize animations on mount
   useEffect(() => {
@@ -51,14 +66,14 @@ export default function OurCakes() {
   }, []);
 
   const filteredCakes = useMemo(() => {
-    return MOCK_CAKES.filter(cake => {
+    return cakes.filter(cake => {
       const matchCat = activeCategory === 'All' || cake.category === activeCategory;
       const matchColor = activeColor === 'All' || cake.color === activeColor;
       const matchPrice = cake.price <= maxPrice;
-      const matchSearch = cake.name.toLowerCase().includes(searchQuery.toLowerCase()) || cake.desc.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchSearch = cake.name.toLowerCase().includes(searchQuery.toLowerCase()) || cake.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchColor && matchPrice && matchSearch;
     });
-  }, [activeCategory, activeColor, maxPrice, searchQuery]);
+  }, [activeCategory, activeColor, maxPrice, searchQuery, cakes]);
 
   // Sidebar Filter Section Component
   const FilterSection = () => (
@@ -297,14 +312,27 @@ export default function OurCakes() {
                )}
             </div>
 
-            {filteredCakes.length === 0 ? (
-               <div style={{ textAlign: 'center', padding: '80px 20px', background: 'rgba(255,255,255,0.5)', borderRadius: '32px', border: '2px dashed #F5E6C8' }}>
-                 <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🎂</div>
-                 <h3 style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.8rem', color: '#78350F' }}>No Cakes Found</h3>
-                 <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '1.1rem', color: '#A16207', maxWidth: '400px', margin: '0 auto' }}>We couldn't find any cakes matching your exquisite taste profile. Try adjusting the filters!</p>
-               </div>
-            ) : (
-               <div style={{ 
+            {/* Content Grid */}
+            <div className="flex-1 w-full">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-40 bg-white/50 rounded-3xl border border-white">
+                   <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mb-4"></div>
+                   <p className="font-['Baloo_2'] font-bold text-amber-950 text-xl tracking-tight">
+                     Warming up the ovens...
+                   </p>
+                   <p className="text-amber-900/60 font-medium">
+                     Fetching our masterpieces from the bakery.
+                   </p>
+                </div>
+              ) : filteredCakes.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.6)', borderRadius: '32px', backdropFilter: 'blur(10px)' }}>
+                   <p style={{ fontFamily: "'Baloo 2', cursive", fontSize: '1.5rem', color: '#B45309', fontWeight: 'bold' }}>No cakes found matching your taste.</p>
+                   <button onClick={() => { setActiveCategory('All'); setActiveColor('All'); setMaxPrice(15000); setSearchQuery(''); }} style={{ marginTop: '16px', background: 'none', border: '2px solid #F59E0B', color: '#B45309', padding: '8px 24px', borderRadius: '999px', fontFamily: "'Baloo 2', cursive", fontWeight: 'bold', cursor: 'pointer' }}>
+                     Clear all filters
+                   </button>
+                </div>
+              ) : (
+                <div style={{ 
                  display: 'grid', 
                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
                  gap: '32px' 
@@ -329,7 +357,7 @@ export default function OurCakes() {
                     >
                        <div style={{ position: 'relative', height: '240px', overflow: 'hidden' }}>
                           <img 
-                            src={cake.image} 
+                            src={cake.image_url} 
                             alt={cake.name} 
                             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
                             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
@@ -346,7 +374,7 @@ export default function OurCakes() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                              <h3 style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.3rem', color: '#78350F', lineHeight: 1.2 }}>{cake.name}</h3>
                           </div>
-                          <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.95rem', color: '#A16207', marginBottom: '20px', flex: 1, lineHeight: 1.5 }}>{cake.desc}</p>
+                          <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.95rem', color: '#A16207', marginBottom: '20px', flex: 1, lineHeight: 1.5 }}>{cake.description}</p>
                           
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #FEF3C7' }}>
                              <span style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.25rem', color: '#92400E' }}>
@@ -396,9 +424,10 @@ export default function OurCakes() {
                        </div>
                     </article>
                   ))}
-               </div>
-            )}
-         </main>
+                </div>
+             )}
+          </div>
+        </main>
       </div>
 
       <style>{`

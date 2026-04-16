@@ -6,9 +6,27 @@ export default function AcademyPage() {
   const [selectedBatch, setSelectedBatch] = useState<{name: string, date: string, price: string} | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [visibleElements, setVisibleElements] = useState<number>(0);
+  const [intakes, setIntakes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    const fetchBatches = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/academy/batches');
+        const data = await response.json();
+        if (data.success) {
+          setIntakes(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch batches:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBatches();
+
     // Staggered entrance animation like OurCakes
     const timers = [100, 200, 300, 400, 500, 600].map((t, i) => 
       setTimeout(() => setVisibleElements(i + 1), t)
@@ -16,8 +34,12 @@ export default function AcademyPage() {
     return () => timers.forEach(clearTimeout);
   }, []);
 
-  const openRegistration = (batch: {name: string, date: string, price: string}) => {
-    setSelectedBatch(batch);
+  const openRegistration = (batch: any) => {
+    setSelectedBatch({
+      name: batch.name,
+      date: new Date(batch.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      price: `KES ${Number(batch.price).toLocaleString()}`
+    });
     setIsModalOpen(true);
   };
 
@@ -35,12 +57,6 @@ export default function AcademyPage() {
     { icon: <Users className="w-6 h-6" />, title: 'Small Batches', desc: 'Maximum 8 students per class for personalized attention.' },
     { icon: <Award className="w-6 h-6" />, title: 'Certified', desc: 'Globally recognized certification upon graduation.' },
     { icon: <BookOpen className="w-6 h-6" />, title: 'Recipe Vault', desc: 'Physical copy of our secret trade-recipe handbook.' },
-  ];
-
-  const intakes = [
-    { name: 'Beginner Baker (Batch #12)', date: 'April 19, 2026', price: 'KES 4,500', course: 'Beginner Baker (Batch #12)', status: '3 spots left', color: 'bg-amber-100 text-amber-800' },
-    { name: 'Intermediate Artist', date: 'May 05, 2026', price: 'KES 9,800', course: 'Intermediate Artist', status: 'Filling fast', color: 'bg-orange-100 text-orange-800' },
-    { name: 'Pro Masterclass', date: 'May 20, 2026', price: 'KES 18,500', course: 'Pro Masterclass', status: 'Open', color: 'bg-emerald-100 text-emerald-800' },
   ];
 
   return (
@@ -145,17 +161,24 @@ export default function AcademyPage() {
           <p className="text-amber-700/60 font-medium mb-10 italic">Limited seats per batch — Secure your spot early!</p>
           
           <div className="space-y-4">
-            {intakes.map((intake, i) => (
+            {loading ? (
+              <div className="py-12 flex flex-col items-center justify-center text-amber-900/40">
+                <ChefHat size={40} className="animate-bounce mb-2" />
+                <p className="font-bold">Checking our master calendar...</p>
+              </div>
+            ) : intakes.length === 0 ? (
+               <p className="text-center py-10 font-bold text-amber-900/40">No upcoming physical intakes scheduled at the moment.</p>
+            ) : intakes.map((intake, i) => (
               <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-amber-50/50 border border-amber-100 hover:bg-amber-50 transition-colors">
                 <div className="mb-4 md:mb-0">
                   <div className="flex items-center gap-2 text-amber-900 font-bold mb-1">
                     <Clock size={16} />
-                    <span>{intake.date}</span>
+                    <span>{new Date(intake.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                   </div>
-                  <p className="text-lg font-['Baloo_2'] font-bold text-amber-800">{intake.course}</p>
+                  <p className="text-lg font-['Baloo_2'] font-bold text-amber-800">{intake.name}</p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${intake.color}`}>
+                  <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${intake.status_color || 'bg-amber-100 text-amber-800'}`}>
                     {intake.status}
                   </span>
                   <button 
@@ -213,7 +236,7 @@ export default function AcademyPage() {
       <AcademyRegistrationModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        batch={selectedBatch}
+        item={selectedBatch}
       />
     </div>
   );
