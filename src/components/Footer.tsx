@@ -1,5 +1,8 @@
+import { useNavigation } from '../context/NavigationContext';
+
 export default function Footer() {
   const year = new Date().getFullYear();
+  const { goToAdminLogin } = useNavigation();
 
   return (
     <footer style={{ background: '#1C0A00', padding: '60px 0 28px', position: 'relative', overflow: 'hidden' }}>
@@ -170,7 +173,26 @@ export default function Footer() {
           <p style={{ fontFamily: "'Comic Neue', cursive", color: '#6B4C1E', fontSize: '0.82rem', margin: 0 }}>
             © {year} Johsther Cakes & Academy. Made with love in Nairobi 🇰🇪
           </p>
-          <div style={{ display: 'flex', gap: '20px' }}>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <button 
+              onClick={goToAdminLogin}
+              style={{
+                fontFamily: "'Comic Neue', cursive",
+                color: '#6B4C1E',
+                fontSize: '0.82rem',
+                textDecoration: 'none',
+                transition: 'color 0.2s',
+                cursor: 'pointer',
+                background: 'none',
+                border: 'none',
+                padding: 0
+              }}
+              onMouseEnter={e => ((e.target as HTMLButtonElement).style.color = '#F59E0B')}
+              onMouseLeave={e => ((e.target as HTMLButtonElement).style.color = '#6B4C1E')}
+            >
+              Staff Portal
+            </button>
+            <div style={{ width: '1px', height: '12px', background: 'rgba(245,158,11,0.2)' }}></div>
             {['Privacy Policy', 'Terms of Service'].map(l => (
               <a key={l} href="#" style={{
                 fontFamily: "'Comic Neue', cursive",

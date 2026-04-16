@@ -1,10 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useCart } from '../context/CartContext';
 import { useNavigation } from '../context/NavigationContext';
 import { 
-  ShoppingCart, 
   Search, 
-  X, 
   Check, 
   Play, 
   BookOpen, 
@@ -12,10 +9,11 @@ import {
   Globe, 
   Download, 
   Award,
-  Filter,
   Users,
-  Lock
+  Lock,
+  ArrowRight
 } from 'lucide-react';
+import AcademyRegistrationModal from '../components/AcademyRegistrationModal';
 
 const CATEGORIES = ['All', 'Beginner', 'Intermediate', 'Professional'];
 
@@ -101,15 +99,12 @@ const MOCK_COURSES = [
 ];
 
 export default function CoursesPage() {
-  const { addToCart, items, subtotal, updateQuantity, setIsCartOpen } = useCart();
   const { goToCheckout } = useNavigation();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleElements, setVisibleElements] = useState<number>(0);
-
-  // Filter only for courses in the cart
-  const courseItemsInCart = useMemo(() => items.filter(item => item.id >= 500 && item.id < 600), [items]);
-  const coursesSubtotal = useMemo(() => courseItemsInCart.reduce((acc, item) => acc + (item.priceNum * item.quantity), 0), [courseItemsInCart]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<{name: string, date: string, price: string} | null>(null);
 
   // Initialize animations on mount
   useEffect(() => {
@@ -119,6 +114,15 @@ export default function CoursesPage() {
     );
     return () => timers.forEach(clearTimeout);
   }, []);
+
+  const openRegistration = (course: any) => {
+    setSelectedCourse({
+      name: course.name,
+      date: 'Instant Access',
+      price: `KES ${course.price.toLocaleString()}`
+    });
+    setIsModalOpen(true);
+  };
 
   const filteredCourses = useMemo(() => {
     return MOCK_COURSES.filter(course => {
@@ -186,7 +190,6 @@ export default function CoursesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {filteredCourses.map((course, i) => {
-              const inCart = items.find(item => item.id === course.id);
               return (
                 <article 
                   key={course.id}
@@ -235,35 +238,19 @@ export default function CoursesPage() {
                       ))}
                     </ul>
 
-                    <div className="pt-6 border-t border-amber-100 flex items-center justify-between">
+                    <div className="pt-6 border-t border-amber-100 flex items-center justify-between gap-4">
                        <div>
                          <p className="text-xs font-bold text-amber-900/40 uppercase tracking-tighter mb-1">Tuition Fee</p>
                          <p className="text-2xl font-['Baloo_2'] font-extrabold text-[#78350F]">KES {course.price.toLocaleString()}</p>
                        </div>
 
-                       {inCart ? (
-                         <div className="flex bg-amber-100 rounded-2xl p-1 gap-2 border border-amber-200">
-                           <button onClick={() => updateQuantity(course.id, -1)} className="w-8 h-8 flex items-center justify-center bg-white text-amber-900 rounded-xl font-bold hover:bg-amber-50 transition-colors">-</button>
-                           <span className="w-4 flex items-center justify-center font-bold text-amber-900">{inCart.quantity}</span>
-                           <button onClick={() => updateQuantity(course.id, 1)} className="w-8 h-8 flex items-center justify-center bg-white text-amber-900 rounded-xl font-bold hover:bg-amber-50 transition-colors">+</button>
-                         </div>
-                       ) : (
-                        <button 
-                          aria-label={`Add ${course.name} to cart`}
-                          onClick={() => {
-                            addToCart({
-                              id: course.id,
-                              name: course.name,
-                              priceNum: course.price,
-                              priceStr: `KES ${course.price.toLocaleString()}`,
-                              image: course.image
-                            });
-                          }}
-                          className="w-14 h-14 rounded-2xl bg-[#78350F] text-white flex items-center justify-center hover:bg-amber-500 transition-all shadow-xl shadow-amber-900/20 active:scale-95"
-                        >
-                          <ShoppingCart size={22} />
-                        </button>
-                       )}
+                       <button 
+                         onClick={() => openRegistration(course)}
+                         className="flex-1 h-14 rounded-2xl bg-[#78350F] text-white flex items-center justify-center gap-2 hover:bg-amber-500 transition-all shadow-xl shadow-amber-900/20 active:scale-95 font-bold text-sm"
+                       >
+                         Enroll Now
+                         <ArrowRight size={18} />
+                       </button>
                     </div>
                   </div>
                 </article>
@@ -308,51 +295,11 @@ export default function CoursesPage() {
          </div>
       </section>
 
-      {/* Floating Checkout Bar (appears when items are in cart) */}
-      {courseItemsInCart.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-4xl animate-[slideInUp_0.6s_cubic-bezier(0.16,1,0.3,1)]">
-           <div className="bg-amber-950/90 backdrop-blur-2xl rounded-[32px] p-4 md:p-6 border-2 border-amber-500/30 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center justify-between gap-6">
-              
-              <div className="flex items-center gap-6 overflow-x-auto max-w-full pb-2 md:pb-0">
-                 <div className="flex -space-x-4">
-                    {courseItemsInCart.map((item, idx) => (
-                      <div key={item.id} className="relative group" style={{ zIndex: 10 + idx }}>
-                        <img 
-                          src={item.image} 
-                          className="w-14 h-14 rounded-full border-4 border-amber-900 object-cover shadow-lg" 
-                          alt={item.name} 
-                        />
-                        <div className="absolute -top-2 -right-2 bg-amber-500 text-amber-950 text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-amber-900">
-                          {item.quantity}
-                        </div>
-                      </div>
-                    ))}
-                 </div>
-                 <div>
-                    <p className="text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Your Selected Courses</p>
-                    <p className="text-white font-['Baloo_2'] font-bold text-xl">
-                      {courseItemsInCart.length} Class{courseItemsInCart.length > 1 ? 'es' : ''} • KES {coursesSubtotal.toLocaleString()}
-                    </p>
-                 </div>
-              </div>
-
-              <div className="flex items-center gap-4 w-full md:w-auto">
-                 <button 
-                   onClick={() => setIsCartOpen(true)}
-                   className="flex-1 md:flex-none px-6 py-4 rounded-2xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all border border-white/10"
-                 >
-                   View All
-                 </button>
-                 <button 
-                   onClick={goToCheckout}
-                   className="flex-1 md:flex-none px-12 py-4 rounded-2xl bg-amber-500 text-amber-950 font-['Baloo_2'] font-black text-lg hover:bg-amber-400 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-amber-500/20"
-                 >
-                   Checkout Now
-                 </button>
-              </div>
-           </div>
-        </div>
-      )}
+      <AcademyRegistrationModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        item={selectedCourse}
+      />
 
       <style>{`
         @keyframes slideInUp {

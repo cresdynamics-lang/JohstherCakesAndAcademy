@@ -1,67 +1,21 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-const courses = [
-  {
-    name: 'Beginner Baker Online',
-    subtitle: 'Master the basics from your own kitchen',
-    price: 'KES 2,900',
-    duration: '12 Video Modules',
-    sessions: 'Lifetime Access',
-    tag: null,
-    image: '/hero_baker.png',
-    color: '#B45309',
-    features: [
-      'Step-by-step video tutorials',
-      'Downloadable recipe PDFs',
-      'Private WhatsApp support group',
-      'Learn at your own pace',
-      'Digital certificate of completion',
-    ],
-    cta: 'Get Instant Access',
-  },
-  {
-    name: 'Master Cake Artist',
-    subtitle: 'Advanced techniques, anywhere in the world',
-    price: 'KES 7,500',
-    subtitle_2: 'Pro-level certification',
-    duration: '24 HD Lessons',
-    sessions: 'On-Demand',
-    tag: 'Best Seller',
-    image: '/hero_cake_elegant.png',
-    color: '#F59E0B',
-    features: [
-      'Fondant & Sculpting masterclass',
-      'Multi-tier cake architecture',
-      'Business & Pricing modules',
-      'Monthly Live Q&A sessions',
-      'Professional Portfolio tips',
-      'Exclusive Alumni community',
-    ],
-    cta: 'Enroll Online',
-  },
-  {
-    name: 'Professional Path',
-    subtitle: 'Launch your baking business digitally',
-    price: 'KES 12,000',
-    duration: 'Full Certification',
-    sessions: 'Unlimited Access',
-    tag: 'Premium',
-    image: '/academy-class.png',
-    color: '#92400E',
-    features: [
-      'Advanced 3D & Sculpted cakes',
-      'Marketing & Social Media for bakers',
-      'Access to all future updates',
-      '1-on-1 Digital mentorship call',
-      'Business templates & contracts',
-      'Internship opportunities (Remote)',
-    ],
-    cta: 'Start Pro Journey',
-  },
-];
-
+interface Course {
+  id: number;
+  title: string;
+  subtitle: string;
+  price: number;
+  duration: string;
+  sessions: string;
+  image_url: string;
+  brand_color: string;
+  features: string[];
+  tag: string;
+}
 export default function Courses() {
   const ref = useRef<HTMLElement>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const el = ref.current;
@@ -71,6 +25,22 @@ export default function Courses() {
       { threshold: 0.1 }
     );
     el.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/courses');
+        const data = await response.json();
+        if (data.success) {
+          setCourses(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch courses:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+
     return () => obs.disconnect();
   }, []);
 
@@ -83,7 +53,7 @@ export default function Courses() {
         <div className="fade-up" style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div className="pill" style={{ background: '#FEF3C7', border: '2px solid #F59E0B', color: '#92400E', marginBottom: '16px', display: 'inline-flex' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
             </svg>
             Online Baking Academy
           </div>
@@ -109,29 +79,38 @@ export default function Courses() {
           gap: '28px',
           alignItems: 'start',
         }}>
-          {courses.map((course) => {
-            const isPopular = course.tag === 'Most Popular';
+          {loading ? (
+            <div style={{ gridColumn: '1 / -1', padding: '100px 0', textAlign: 'center' }}>
+              <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="font-['Baloo_2'] font-bold text-amber-950">Preparing your curriculum...</p>
+            </div>
+          ) : courses.map((course) => {
+            const isPopular = course.tag === 'Best Seller' || course.tag === 'Most Popular';
+            const color = course.brand_color || '#B45309';
             return (
               <article
-                key={course.name}
+                key={course.id}
                 className="card-lift fade-up"
                 style={{
                   background: '#fff',
                   borderRadius: '28px',
                   overflow: 'hidden',
-                  border: isPopular ? `3px solid ${course.color}` : '2px solid #F5E6C8',
+                  border: isPopular ? `3px solid ${color}` : '2px solid #F5E6C8',
                   position: 'relative',
                   transform: isPopular ? 'scale(1.03)' : 'scale(1)',
                   boxShadow: isPopular ? `0 20px 50px rgba(245,158,11,0.25)` : '0 4px 20px rgba(146,64,14,0.08)',
                   cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%'
                 }}
               >
                 {/* Popular badge */}
                 {course.tag && (
                   <div style={{
                     position: 'absolute', top: '18px', right: '18px',
-                    background: course.color,
-                    color: isPopular ? '#1C0A00' : '#fff',
+                    background: color,
+                    color: isPopular ? '#fff' : '#fff',
                     fontFamily: "'Baloo 2', cursive",
                     fontWeight: 700,
                     fontSize: '0.75rem',
@@ -146,15 +125,15 @@ export default function Courses() {
                 {/* Image */}
                 <div style={{ height: '180px', overflow: 'hidden' }}>
                   <img
-                    src={course.image}
-                    alt={`${course.name} baking course at Johsther Academy`}
+                    src={course.image_url}
+                    alt={`${course.title} baking course at Johsther Academy`}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
                     onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.08)')}
                     onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                   />
                 </div>
 
-                <div style={{ padding: '24px 26px 28px' }}>
+                <div style={{ padding: '24px 26px 28px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                   {/* Duration pills */}
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
                     {[course.duration, course.sessions].map(d => (
@@ -172,7 +151,7 @@ export default function Courses() {
                   </div>
 
                   <h3 style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.25rem', color: '#78350F', marginBottom: '4px' }}>
-                    {course.name}
+                    {course.title}
                   </h3>
                   <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.88rem', color: '#A16207', marginBottom: '20px' }}>
                     {course.subtitle}
@@ -182,8 +161,8 @@ export default function Courses() {
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {course.features.map(f => (
                       <li key={f} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={course.color} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                          <polyline points="20 6 9 17 4 12"/>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                          <polyline points="20 6 9 17 4 12" />
                         </svg>
                         <span style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.9rem', color: '#78350F' }}>{f}</span>
                       </li>
@@ -191,9 +170,11 @@ export default function Courses() {
                   </ul>
 
                   {/* Price + CTA */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px', borderTop: '1.5px solid #F5E6C8' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px', borderTop: '1.5px solid #F5E6C8', marginTop: 'auto' }}>
                     <div>
-                      <div style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.5rem', color: '#78350F' }}>{course.price}</div>
+                      <div style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.5rem', color: '#78350F' }}>
+                        KES {Number(course.price).toLocaleString()}
+                      </div>
                       <div style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.78rem', color: '#A16207' }}>per person · all-inclusive</div>
                     </div>
                     <button
@@ -201,20 +182,20 @@ export default function Courses() {
                         fontFamily: "'Baloo 2', cursive",
                         fontWeight: 700,
                         fontSize: '0.9rem',
-                        background: `linear-gradient(135deg, ${course.color}, #F59E0B)`,
+                        background: `linear-gradient(135deg, ${color}, #F59E0B)`,
                         color: '#fff',
                         border: 'none',
                         padding: '11px 24px',
                         borderRadius: '999px',
                         cursor: 'pointer',
-                        boxShadow: `0 6px 18px ${course.color}44`,
+                        boxShadow: `0 6px 18px ${color}44`,
                         transition: 'opacity 0.2s, transform 0.2s',
                       }}
                       onMouseEnter={e => { (e.currentTarget).style.opacity = '0.88'; (e.currentTarget).style.transform = 'translateY(-2px)'; }}
                       onMouseLeave={e => { (e.currentTarget).style.opacity = '1'; (e.currentTarget).style.transform = 'translateY(0)'; }}
-                      aria-label={`Enrol in ${course.name}`}
+                      aria-label={`Enrol in ${course.title}`}
                     >
-                      {course.cta}
+                      Enrol Now
                     </button>
                   </div>
                 </div>
@@ -242,3 +223,4 @@ export default function Courses() {
     </section>
   );
 }
+
